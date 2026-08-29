@@ -3,69 +3,70 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Soccer Player Career — 3 Slots (Edge playable)</title>
+  <title>Soccer Player Career — Slots (Edge playable)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Soccer Player Career</h1>
-    <p>Three save slots — click a slot to create or edit a player. Works in Microsoft Edge and other modern browsers.</p>
-  </header>
+  <div id="slides">
+    <!-- Slide 1: Fullscreen Slots -->
+    <section id="slots-screen" class="slide">
+      <header class="hero">
+        <h1>Soccer Player Career</h1>
+        <p class="lead">Tap a slot to begin — big, vibrant, and optimized for Microsoft Edge.</p>
+      </header>
 
-  <main>
-    <section id="slots" class="card">
-      <h2>Save Slots</h2>
-      <div class="slots-row">
-        <button class="slot" data-slot="0"><strong>Slot 1</strong><div class="slot-meta" data-slot-meta="0">Empty</div></button>
-        <button class="slot" data-slot="1"><strong>Slot 2</strong><div class="slot-meta" data-slot-meta="1">Empty</div></button>
-        <button class="slot" data-slot="2"><strong>Slot 3</strong><div class="slot-meta" data-slot-meta="2">Empty</div></button>
+      <main class="slots-grid">
+        <button class="big-slot" data-slot="0">
+          <div class="slot-label">Slot 1</div>
+          <div class="slot-meta" data-slot-meta="0">Empty</div>
+        </button>
+        <button class="big-slot" data-slot="1">
+          <div class="slot-label">Slot 2</div>
+          <div class="slot-meta" data-slot-meta="1">Empty</div>
+        </button>
+        <button class="big-slot" data-slot="2">
+          <div class="slot-label">Slot 3</div>
+          <div class="slot-meta" data-slot-meta="2">Empty</div>
+        </button>
+      </main>
+
+      <footer class="footer muted">Each slot stores its profile in your browser. Use the arrows in the editor to return to slots.</footer>
+    </section>
+
+    <!-- Slide 2: Editor (full page) -->
+    <section id="editor-screen" class="slide">
+      <div class="editor-top">
+        <button id="back-button" class="secondary">← Back to Slots</button>
+        <div class="editor-title">Create / Edit Player — <span id="editor-slot-label">Slot ?</span></div>
       </div>
-      <p class="muted">Click a slot to open the player editor. Each slot stores a player profile and career log in your browser (localStorage). Use the download buttons inside the editor to export JSON/MD.</p>
-    </section>
 
-    <section id="sim" class="card">
-      <h2>Simulator</h2>
-      <label>Seasons to simulate: <input id="seasons" type="number" value="1" min="1" max="10" /></label>
-      <button id="sim-btn">Simulate Season(s) for active slot</button>
-      <div id="sim-result"></div>
-    </section>
+      <div class="editor-body">
+        <div class="left-col">
+          <label class="big-label">Name</label>
+          <input id="edit-name" class="big-input" type="text" placeholder="Player name" />
 
-    <section id="career" class="card">
-      <h2>Active Profile & Career Log</h2>
-      <div id="profile-view" class="mono"></div>
-      <pre id="career-log"></pre>
-    </section>
-  </main>
+          <label class="big-label">Choose Nation</label>
+          <input id="nation-search" class="big-input" placeholder="Search nation..." />
+          <div id="nation-list" class="picker-grid"></div>
+        </div>
 
-  <!-- Editor modal -->
-  <div id="editor-modal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-      <h3 id="editor-title">Edit Player — Slot <span id="editor-slot">?</span></h3>
-      <div class="form-grid">
-        <label>Name <input id="edit-name" type="text" /></label>
-        <label>Nation <input id="nation-search" placeholder="Search nation..." /></label>
-        <div id="nation-list" class="picker-list"></div>
-        <label>Position</label>
-        <div id="position-list" class="picker-list positions"></div>
-        <label>Starting Team</label>
-        <select id="team-select"></select>
-        <div class="form-actions">
-          <button id="apply-btn">Apply</button>
-          <button id="cancel-btn" class="secondary">Cancel</button>
-          <button id="download-profile" class="secondary">Download profile.json</button>
-          <button id="download-log" class="secondary">Download career_log.md</button>
+        <div class="right-col">
+          <label class="big-label">Position</label>
+          <div id="position-list" class="positions-grid"></div>
+
+          <label class="big-label">Choose Team</label>
+          <input id="team-search" class="big-input" placeholder="Search team or league..." />
+          <div id="team-list" class="picker-grid team-grid"></div>
+
+          <div class="editor-actions">
+            <button id="apply-btn">Apply & Save to Slot</button>
+            <button id="download-profile" class="secondary">Download profile.json</button>
+            <button id="download-log" class="secondary">Download career_log.md</button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
-
-  <template id="position-template">
-    <div class="pos-card" tabindex="0">
-      <div class="pos-icon"></div>
-      <div class="pos-name"></div>
-      <div class="pos-desc small muted"></div>
-    </div>
-  </template>
 
   <script src="app.js"></script>
 </body>

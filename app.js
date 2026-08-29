@@ -1,39 +1,46 @@
-// Enhanced browser-based soccer player career simulator with 3 slots
-// - Three save slots stored in localStorage
-// - Click a slot to open an editor: pick nation from a list, choose position by clicking cards (with icons/descriptions), pick team from major leagues, change name, then Apply
-// - Download profile and career log per slot
+// Full-page slots and editor, no simulator. Vibrant UI, large text, slide transitions.
 
-const SLOTS_KEY = 'spc_slots_v1'
-const ACTIVE_SLOT_KEY = 'spc_active_slot_v1'
+const SLOTS_KEY = 'spc_slots_v2'
+const ACTIVE_SLOT_KEY = 'spc_active_slot_v2'
 
-const defaultProfile = {
-  name: 'New Player',
-  nation: 'Spain',
-  starting_team: 'FC Barcelona',
-  position: 'Midfielder',
-  age: 18,
-  attributes: { pace: 75, shooting: 70, passing: 72, dribbling: 74, defending: 60, physical: 68 }
-}
+const defaultProfile = { name: 'New Player', nation: 'Spain', starting_team: 'FC Barcelona', position: 'Midfielder', age: 18, attributes: { pace:75, shooting:70, passing:72, dribbling:74, defending:60, physical:68 } }
 
 const positions = [
-  {id:'Striker', name:'Striker', icon:'⚽', desc:'Primary goal-scorer — focuses on finishing and movement.'},
-  {id:'Midfielder', name:'Midfielder', icon:'🎯', desc:'Controls the tempo — passing, vision, and stamina.'},
-  {id:'Defender', name:'Defender', icon:'🛡️', desc:'Stops attacks — tackling, marking, and positioning.'},
-  {id:'Goalkeeper', name:'Goalkeeper', icon:'🧤', desc:'Saves shots — handling, reflexes, and distribution.'}
+  {id:'Striker', name:'Striker', desc:'Primary goal-scorer — finishing and movement.'},
+  {id:'Midfielder', name:'Midfielder', desc:'Controls the tempo — passing and vision.'},
+  {id:'Defender', name:'Defender', desc:'Stops attacks — tackling and positioning.'},
+  {id:'Goalkeeper', name:'Goalkeeper', desc:'Saves shots — reflexes and handling.'}
 ]
 
-// Major leagues + some teams for the team picker. Expandable later.
+// Expanded team lists for major leagues (expandable later)
 const leagues = [
-  {league:'Premier League', teams:['Manchester United','Manchester City','Liverpool','Chelsea','Arsenal','Tottenham Hotspur','Leicester City']},
-  {league:'LaLiga', teams:['FC Barcelona','Real Madrid','Atletico Madrid','Sevilla','Real Sociedad']},
-  {league:'Serie A', teams:['Juventus','Inter Milan','AC Milan','Napoli','AS Roma']},
-  {league:'Bundesliga', teams:['Bayern Munich','Borussia Dortmund','RB Leipzig','Bayer Leverkusen']},
-  {league:'Ligue 1', teams:['Paris Saint-Germain','Olympique Lyonnais','AS Monaco','Marseille']},
-  {league:'MLS', teams:['LA Galaxy','Inter Miami','Seattle Sounders','Toronto FC']},
-  {league:'Brasileirao', teams:['Flamengo','Palmeiras','Sao Paulo','Corinthians']}
+  {league:'Premier League', teams:[
+    'Arsenal','Aston Villa','Bournemouth','Brentford','Brighton & Hove Albion','Burnley','Chelsea','Crystal Palace','Everton','Fulham','Liverpool','Luton Town','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Sheffield United','Tottenham Hotspur','West Ham United','Wolves'
+  ]},
+  {league:'LaLiga', teams:[
+    'Alaves','Athletic Club','Atletico Madrid','Barcelona','Cadiz','Celta Vigo','Getafe','Girona','Granada','Las Palmas','Mallorca','Rayo Vallecano','Real Betis','Real Madrid','Real Sociedad','Sevilla','Valencia','Villarreal'
+  ]},
+  {league:'Serie A', teams:[
+    'Atalanta','Bologna','Cagliari','Fiorentina','Genoa','Inter Milan','Juventus','Lazio','Lecce','Monza','Napoli','AC Milan','AS Roma','Salernitana','Sassuolo','Spezia','Torino','Udinese','Empoli','Frosinone'
+  ]},
+  {league:'Bundesliga', teams:[
+    'Bayern Munich','Borussia Dortmund','Bayer Leverkusen','RB Leipzig','Eintracht Frankfurt','VfL Wolfsburg','VfB Stuttgart','Borussia Mönchengladbach','1. FC Köln','TSG Hoffenheim','FC Augsburg','Hertha BSC','Werder Bremen','Schalke 04','Hamburger SV'
+  ]},
+  {league:'Ligue 1', teams:[
+    'Paris Saint-Germain','Marseille','Lyon','Monaco','Rennes','Nice','Lens','Lille','Bordeaux','Nantes','Saint-Etienne','Montpellier','Strasbourg','Toulouse','Angers','Brest'
+  ]},
+  {league:'MLS', teams:[
+    'Atlanta United FC','Austin FC','CF Montreal','Charlotte FC','Chicago Fire','Colorado Rapids','Columbus Crew','FC Cincinnati','D.C. United','FC Dallas','Inter Miami CF','LA Galaxy','Los Angeles FC','Minnesota United','Nashville SC','New England Revolution','New York City FC','New York Red Bulls','Orlando City SC','Philadelphia Union','Portland Timbers','Real Salt Lake','San Jose Earthquakes','Seattle Sounders','Sporting Kansas City','St. Louis City SC','Toronto FC','Vancouver Whitecaps FC'
+  ]},
+  {league:'Brasileirao', teams:[
+    'Atletico Mineiro','Atletico Paranaense','Bahia','Botafogo','Ceara','Corinthians','Flamengo','Fluminense','Fortaleza','Gremio','Internacional','Palmeiras','Santos','Sao Paulo','Vasco da Gama'
+  ]},
+  {league:'Argentina Primera', teams:[
+    'Boca Juniors','River Plate','Independiente','Racing Club','San Lorenzo','Velez Sarsfield','Estudiantes','Newell\'s Old Boys','Argentinos Juniors'
+  ]}
 ]
 
-// Comprehensive country list (ISO common names)
+// Comprehensive country list
 const countries = [
   "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan",
   "Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi",
@@ -56,131 +63,135 @@ const countries = [
   "Yemen","Zambia","Zimbabwe"
 ]
 
-// Utility: storage
-function loadSlots(){
-  try{const j=JSON.parse(localStorage.getItem(SLOTS_KEY)||'null');return Array.isArray(j)?j:[null,null,null]}catch(e){return [null,null,null]}
-}
+// Storage helpers
+function loadSlots(){try{const j=JSON.parse(localStorage.getItem(SLOTS_KEY)||'null');return Array.isArray(j)?j:[null,null,null]}catch(e){return [null,null,null]}}
 function saveSlots(slots){localStorage.setItem(SLOTS_KEY,JSON.stringify(slots))}
-
-function loadActiveSlot(){const v = localStorage.getItem(ACTIVE_SLOT_KEY);return v===null?null:Number(v)}
+function loadActiveSlot(){const v=localStorage.getItem(ACTIVE_SLOT_KEY);return v===null?null:Number(v)}
 function saveActiveSlot(n){localStorage.setItem(ACTIVE_SLOT_KEY,String(n))}
 
+// Slide controls
+function showEditorForSlot(slotIndex){
+  document.getElementById('slides').style.height = '100%'
+  // translate slides: move slots-screen left, editor-screen into view
+  const slotsScreen = document.getElementById('slots-screen')
+  const editorScreen = document.getElementById('editor-screen')
+  slotsScreen.style.transform = 'translateX(-100%)'
+  editorScreen.style.transform = 'translateX(0)'
+  editorScreen.classList.add('active')
+  document.getElementById('editor-slot-label').textContent = `Slot ${slotIndex+1}`
+  document.getElementById('editor-slot-label').dataset.slot = slotIndex
+  buildEditorForSlot(slotIndex)
+}
+function backToSlots(){
+  const slotsScreen = document.getElementById('slots-screen')
+  const editorScreen = document.getElementById('editor-screen')
+  slotsScreen.style.transform = 'translateX(0)'
+  editorScreen.style.transform = 'translateX(100%)'
+  editorScreen.classList.remove('active')
+}
+
+// Build UI lists
 function initSlotsUI(){
+  if(!localStorage.getItem(SLOTS_KEY)) saveSlots([null,null,null])
   const slots = loadSlots()
   for(let i=0;i<3;i++){
     const meta = document.querySelector(`[data-slot-meta='${i}']`)
-    const btn = document.querySelector(`.slot[data-slot='${i}']`)
+    const btn = document.querySelector(`.big-slot[data-slot='${i}']`)
     const p = slots[i]
-    if(p){meta.textContent = `${p.name} — ${p.starting_team} (${p.position})`} else {meta.textContent = 'Empty'}
-    btn.onclick = ()=>openEditor(i)
+    meta.textContent = p ? `${p.name} — ${p.starting_team} (${p.position})` : 'Empty'
+    btn.onclick = ()=>showEditorForSlot(i)
   }
 }
 
-function setActiveProfile(profile){
-  const el = document.getElementById('profile-view')
-  document.getElementById('career-log').textContent = localStorage.getItem(`career_slot_${loadActiveSlot()}`) || '# Career Log — ' + profile.name + '\n\n'
-  el.textContent = JSON.stringify(profile,null,2)
-}
-
-function openEditor(slotIndex){
+function buildEditorForSlot(slotIndex){
   const slots = loadSlots()
-  const existing = slots[slotIndex] || structuredClone(defaultProfile)
-  document.getElementById('editor-slot').textContent = slotIndex+1
-  document.getElementById('edit-name').value = existing.name || ''
-  buildNationList(existing.nation)
-  buildPositionCards(existing.position)
-  buildTeamSelect(existing.starting_team)
-  // show modal
-  const modal = document.getElementById('editor-modal')
-  modal.setAttribute('aria-hidden','false')
-  modal.dataset.slot = slotIndex
-}
-
-function closeEditor(){
-  const modal = document.getElementById('editor-modal')
-  modal.setAttribute('aria-hidden','true')
-  delete modal.dataset.slot
-}
-
-function buildNationList(selected){
-  const container = document.getElementById('nation-list')
-  container.innerHTML = ''
+  const profile = slots[slotIndex] || structuredClone(defaultProfile)
+  // fill name
+  document.getElementById('edit-name').value = profile.name || ''
+  // nations
+  const nationList = document.getElementById('nation-list')
+  nationList.innerHTML = ''
   countries.forEach(c=>{
-    const btn = document.createElement('button')
-    btn.className = 'picker-item'
-    btn.textContent = c
-    if(c===selected) btn.style.borderColor = 'var(--accent)'
-    btn.onclick = ()=>{
-      // mark selection visually
-      container.querySelectorAll('.picker-item').forEach(n=>n.style.borderColor='')
-      btn.style.borderColor='var(--accent)'
-      btn.dataset.selected = '1'
+    const el = document.createElement('div')
+    el.className = 'picker-item'
+    el.textContent = c
+    if(c===profile.nation) el.classList.add('selected')
+    el.onclick = ()=>{
+      nationList.querySelectorAll('.picker-item').forEach(n=>n.classList.remove('selected'))
+      el.classList.add('selected')
       document.getElementById('nation-search').value = c
     }
-    container.appendChild(btn)
+    nationList.appendChild(el)
   })
-}
 
-function buildPositionCards(selected){
-  const container = document.getElementById('position-list')
-  container.innerHTML = ''
-  positions.forEach(p=>{
-    const tpl = document.getElementById('position-template').content.cloneNode(true)
-    const card = tpl.querySelector('.pos-card')
-    card.querySelector('.pos-icon').textContent = p.icon
-    card.querySelector('.pos-name').textContent = p.name
-    card.querySelector('.pos-desc').textContent = p.desc
-    if(p.id===selected) card.style.borderColor='var(--accent)'
-    card.onclick = ()=>{
-      container.querySelectorAll('.pos-card').forEach(n=>n.style.borderColor='')
-      card.style.borderColor='var(--accent)'
-      card.dataset.selected = p.id
-    }
-    container.appendChild(card)
+  // positions
+  const posList = document.getElementById('position-list')
+  posList.innerHTML = ''
+  positions.forEach((p,i)=>{
+    const d = document.createElement('div')
+    d.className = 'pos-card' + (i%2? ' alt':'')
+    d.textContent = p.name
+    if(p.name===profile.position) d.classList.add('selected')
+    d.onclick = ()=>{ posList.querySelectorAll('.pos-card').forEach(n=>n.classList.remove('selected')); d.classList.add('selected') }
+    posList.appendChild(d)
   })
-}
 
-function buildTeamSelect(selected){
-  const sel = document.getElementById('team-select')
-  sel.innerHTML = ''
-  leagues.forEach(l=>{
-    const optg = document.createElement('optgroup')
-    optg.label = l.league
-    l.teams.forEach(t=>{
-      const o = document.createElement('option')
-      o.value = t
-      o.textContent = t
-      if(t===selected) o.selected = true
-      optg.appendChild(o)
+  // teams
+  const teamList = document.getElementById('team-list')
+  teamList.innerHTML = ''
+  leagues.forEach(g=>{
+    // optionally add league heading
+    const heading = document.createElement('div')
+    heading.className = 'picker-item'
+    heading.style.fontWeight = '700'
+    heading.style.background = 'transparent'
+    heading.style.cursor = 'default'
+    heading.textContent = g.league
+    teamList.appendChild(heading)
+    g.teams.forEach(t=>{
+      const el = document.createElement('div')
+      el.className = 'picker-item'
+      el.textContent = t
+      if(t===profile.starting_team) el.classList.add('selected')
+      el.onclick = ()=>{
+        teamList.querySelectorAll('.picker-item').forEach(n=>n.classList.remove('selected'))
+        // re-add league headings selection removal
+        teamList.querySelectorAll('.picker-item').forEach(h=>{ if(h.textContent===g.league) {/* leave */} })
+        el.classList.add('selected')
+        document.getElementById('team-search').value = t
+      }
+      teamList.appendChild(el)
     })
-    sel.appendChild(optg)
   })
+
+  // wire searches
+  document.getElementById('nation-search').oninput = (e)=>{
+    const q = e.target.value.toLowerCase()
+    document.querySelectorAll('#nation-list .picker-item').forEach(it=>{it.style.display = it.textContent.toLowerCase().includes(q)?'block':'none'})
+  }
+  document.getElementById('team-search').oninput = (e)=>{
+    const q = e.target.value.toLowerCase()
+    document.querySelectorAll('#team-list .picker-item').forEach(it=>{it.style.display = it.textContent.toLowerCase().includes(q)?'block':'none'})
+  }
 }
 
 function applyEditor(){
-  const modal = document.getElementById('editor-modal')
-  const slotIndex = Number(modal.dataset.slot)
+  const slot = Number(document.getElementById('editor-slot-label').dataset.slot)
   const name = document.getElementById('edit-name').value || 'Unnamed'
-  const nation = document.getElementById('nation-search').value || 'Unknown'
-  // find selected position
-  const posCard = document.querySelector('#position-list .pos-card[style*="--"]')
-  // fallback: find selected via dataset or border
-  let position = null
-  document.querySelectorAll('#position-list .pos-card').forEach(c=>{ if(c.style.borderColor) position = c.querySelector('.pos-name').textContent })
-  if(!position){ position = 'Midfielder' }
-  const team = document.getElementById('team-select').value || 'Unknown'
+  const nationEl = document.querySelector('#nation-list .picker-item.selected')
+  const nation = nationEl ? nationEl.textContent : (document.getElementById('nation-search').value || 'Unknown')
+  const posEl = document.querySelector('#position-list .pos-card.selected')
+  const position = posEl ? posEl.textContent : 'Midfielder'
+  const teamEl = document.querySelector('#team-list .picker-item.selected')
+  const team = teamEl ? teamEl.textContent : (document.getElementById('team-search').value || 'Unknown')
 
   const slots = loadSlots()
-  const profile = {
-    name, nation, starting_team: team, position, age: 18,
-    attributes: structuredClone(defaultProfile.attributes)
-  }
-  slots[slotIndex] = profile
+  const profile = { name, nation, starting_team: team, position, age:18, attributes: structuredClone(defaultProfile.attributes) }
+  slots[slot] = profile
   saveSlots(slots)
-  saveActiveSlot(slotIndex)
+  saveActiveSlot(slot)
   initSlotsUI()
-  setActiveProfile(profile)
-  closeEditor()
+  backToSlots()
 }
 
 function download(filename, content){
@@ -195,76 +206,26 @@ function download(filename, content){
   URL.revokeObjectURL(url)
 }
 
-function wireEditorButtons(){
-  document.getElementById('cancel-btn').onclick = closeEditor
+function wireButtons(){
+  document.getElementById('back-button').onclick = backToSlots
   document.getElementById('apply-btn').onclick = applyEditor
   document.getElementById('download-profile').onclick = ()=>{
-    const slot = loadActiveSlot()
+    const slot = Number(document.getElementById('editor-slot-label').dataset.slot)
     const slots = loadSlots()
-    if(slot===null || !slots[slot]) return alert('No active profile to download')
-    download('player_profile_slot_'+(slot+1)+'.json', JSON.stringify(slots[slot],null,2))
+    if(!slots[slot]) return alert('No profile in this slot')
+    download(`player_profile_slot_${slot+1}.json`, JSON.stringify(slots[slot],null,2))
   }
   document.getElementById('download-log').onclick = ()=>{
-    const slot = loadActiveSlot()
-    const log = localStorage.getItem('career_slot_'+slot) || '# Career Log\n\n'
-    download('career_log_slot_'+(slot+1)+'.md', log)
-  }
-  document.getElementById('nation-search').addEventListener('input', (e)=>{
-    const q = e.target.value.toLowerCase()
-    document.querySelectorAll('#nation-list .picker-item').forEach(it=>{
-      it.style.display = it.textContent.toLowerCase().includes(q)?'inline-block':'none'
-    })
-  })
-}
-
-// Simple simulator: updates selected slot
-function simulateOneSeasonForSlot(slotIndex){
-  const slots = loadSlots()
-  const p = slots[slotIndex]
-  if(!p) return null
-  const appearances = Math.max(1, Math.floor(Math.random()*36)+5 + Math.floor((p.attributes.pace-50)/10))
-  const goals = Math.max(0, Math.floor((p.attributes.shooting + p.attributes.dribbling)/40 * (appearances/10))) + Math.floor(Math.random()*6)
-  const assists = Math.max(0, Math.floor(p.attributes.passing/50 * appearances/10)) + Math.floor(Math.random()*4)
-  // growth
-  const growth = p.age <=24 ? 1.0 : 0.4
-  for(const k in p.attributes){ p.attributes[k] = Math.min(99, p.attributes[k] + Math.round(Math.random()*2*growth)) }
-  p.age += 1
-  slots[slotIndex] = p
-  saveSlots(slots)
-  // append career log
-  const prev = localStorage.getItem('career_slot_'+slotIndex) || `# Career Log — ${p.name}\n\n` 
-  const seasonNum = (prev.match(/Season/g)||[]).length + 1
-  const line = `Season ${seasonNum}\n- Club: ${p.starting_team}\n- Appearances: ${appearances}\n- Goals: ${goals}\n- Assists: ${assists}\n- Notes: Simulated season.\n\n`
-  localStorage.setItem('career_slot_'+slotIndex, prev + line)
-  saveActiveSlot(slotIndex)
-  setActiveProfile(p)
-  return {appearances,goals,assists}
-}
-
-function wireSimulator(){
-  document.getElementById('sim-btn').onclick = ()=>{
-    const n = Number(document.getElementById('seasons').value||1)
-    const slot = loadActiveSlot()
-    if(slot===null) return alert('No active slot. Click a slot and Apply first.')
-    document.getElementById('sim-result').textContent = 'Simulating...'
-    let i = 0
-    function runNext(){
-      if(i>=n){ document.getElementById('sim-result').textContent = `Simulated ${n} season(s).`; return }
-      simulateOneSeasonForSlot(slot)
-      i++
-      setTimeout(runNext, 300)
-    }
-    runNext()
+    const slot = Number(document.getElementById('editor-slot-label').dataset.slot)
+    const log = localStorage.getItem(`career_slot_${slot}`) || `# Career Log — ${ (loadSlots()[slot]||defaultProfile).name }\n\n`
+    download(`career_log_slot_${slot+1}.md`, log)
   }
 }
 
 function init(){
   if(!localStorage.getItem(SLOTS_KEY)) saveSlots([null,null,null])
   initSlotsUI()
-  const active = loadActiveSlot()
-  if(active!==null){ const slots = loadSlots(); if(slots[active]) setActiveProfile(slots[active]) }
-  wireEditorButtons()
-  wireSimulator()
+  wireButtons()
 }
 
 window.addEventListener('load', init)
