@@ -1,0 +1,15 @@
+{
+  "name": "Alex Rivera",
+  "nation": "Spain",
+  "starting_team": "FC Barcelona",
+  "position": "Midfielder",
+  "age": 18,
+  "attributes": {
+    "pace": 78,
+    "shooting": 70,
+    "passing": 75,
+    "dribbling": 76,
+    "defending": 60,
+    "physical": 68
+  }
+}

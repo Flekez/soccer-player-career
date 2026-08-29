@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soccer Player Career — Play in Microsoft Edge</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Soccer Player Career</h1>
+    <p>Playable in Microsoft Edge (and other modern browsers). Use the buttons to simulate seasons, edit the player, and download your profile/log.</p>
+  </header>
+
+  <main>
+    <section id="profile">
+      <h2>Player Profile</h2>
+      <div id="profile-view"></div>
+      <button id="edit-btn">Edit Profile</button>
+      <button id="load-btn">Load profile from file</button>
+      <input id="file-input" type="file" accept="application/json" style="display:none" />
+    </section>
+
+    <section id="sim">
+      <h2>Simulator</h2>
+      <label>Seasons to simulate: <input id="seasons" type="number" value="1" min="1" max="10" /></label>
+      <button id="sim-btn">Simulate Season(s)</button>
+      <div id="sim-result"></div>
+    </section>
+
+    <section id="career">
+      <h2>Career Log</h2>
+      <pre id="career-log"></pre>
+      <button id="download-profile">Download player_profile.json</button>
+      <button id="download-log">Download career_log.md</button>
+    </section>
+  </main>
+
+  <template id="edit-template">
+    <div class="edit-grid">
+      <label>Name: <input name="name" /></label>
+      <label>Nation: <input name="nation" /></label>
+      <label>Starting team: <input name="starting_team" /></label>
+      <label>Position: <input name="position" /></label>
+      <label>Age: <input name="age" type="number" min="15" max="40" /></label>
+      <label>Pace: <input name="pace" type="number" min="1" max="99" /></label>
+      <label>Shooting: <input name="shooting" type="number" min="1" max="99" /></label>
+      <label>Passing: <input name="passing" type="number" min="1" max="99" /></label>
+      <label>Dribbling: <input name="dribbling" type="number" min="1" max="99" /></label>
+      <label>Defending: <input name="defending" type="number" min="1" max="99" /></label>
+      <label>Physical: <input name="physical" type="number" min="1" max="99" /></label>
+      <div class="edit-actions">
+        <button id="save-edit">Save</button>
+        <button id="cancel-edit">Cancel</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
